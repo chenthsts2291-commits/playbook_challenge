@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アメフト プレイブック デザイナー (Save/Load対応)</title>
+    <title>アメフト プレイブック デザイナー (Share対応)</title>
     <style>
         :root {
             --field-color: #81c784; 
@@ -11,69 +11,18 @@
             --offense-color: #1565c0;
             --defense-color: #000000;
         }
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* セーブ＆ロードエリアのスタイル */
-        .save-load-area {
-            background-color: #e3f2fd;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 1px solid #90caf9;
-        }
-        .save-load-area select {
-            padding: 8px;
-            font-size: 14px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            flex: 1;
-        }
+        .save-load-area { background-color: #e3f2fd; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border: 1px solid #90caf9; }
+        .save-load-area select { padding: 8px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; flex: 1; min-width: 200px; }
+        .share-area { width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #90caf9; display: flex; gap: 10px; }
 
-        .header {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .header input {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 15px;
-            font-size: 14px;
-            border: none;
-            border-radius: 4px;
-            background-color: #e0e0e0;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-weight: bold;
-        }
+        .header { display: flex; gap: 15px; margin-bottom: 20px; }
+        .header input { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        
+        button { padding: 10px 15px; font-size: 14px; border: none; border-radius: 4px; background-color: #e0e0e0; cursor: pointer; transition: background 0.2s; font-weight: bold; }
         button.active { background-color: #4caf50; color: white; }
         button:hover { background-color: #bdbdbd; }
         button.active:hover { background-color: #43a047; }
@@ -81,59 +30,29 @@
         .btn-clear-def { background-color: #9e9e9e; color: white; }
         .btn-primary { background-color: #1976d2; color: white; }
         .btn-primary:hover { background-color: #1565c0; }
+        .btn-share { background-color: #00897b; color: white; }
         .print-btn { background-color: #d32f2f; color: white; margin-left: auto; }
         
-        .field-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            background-color: var(--field-color);
-            border: 2px solid var(--line-color);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .yard-line {
-            position: absolute; width: 100%; border-top: 2px dashed rgba(255, 255, 255, 0.5);
-            display: flex; justify-content: space-between; align-items: center; z-index: 5; pointer-events: none;
-        }
+        .field-container { position: relative; width: 100%; height: 400px; background-color: var(--field-color); border: 2px solid var(--line-color); border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .yard-line { position: absolute; width: 100%; border-top: 2px dashed rgba(255, 255, 255, 0.5); display: flex; justify-content: space-between; align-items: center; z-index: 5; pointer-events: none; }
         .yard-line.los { border-top: 3px solid #1976d2; }
-        .yard-label {
-            background: var(--field-color); color: rgba(255, 255, 255, 0.9); padding: 0 10px;
-            font-size: 16px; font-weight: bold; transform: translateY(-50%); 
-        }
+        .yard-label { background: var(--field-color); color: rgba(255, 255, 255, 0.9); padding: 0 10px; font-size: 16px; font-weight: bold; transform: translateY(-50%); }
         .yard-line.los .yard-label { color: #1976d2; font-weight: 900; }
 
         #drawing-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
         #field-players { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
-        .player {
-            position: absolute; width: 30px; height: 30px; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; user-select: none;
-            cursor: grab; border: 2px solid #fff; transform: translate(-50%, -50%);
-            pointer-events: auto;
-        }
+        .player { position: absolute; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; user-select: none; cursor: grab; border: 2px solid #fff; transform: translate(-50%, -50%); pointer-events: auto; }
         .player:active { cursor: grabbing; }
         .player.offense { background-color: var(--offense-color); color: white; }
         .player.defense { background-color: transparent; color: var(--defense-color); border: 2px solid var(--defense-color); font-size: 18px; }
 
         .assignments { display: flex; flex-direction: column; gap: 15px; }
-        .assignment-box { 
-            display: flex; flex-direction: row; align-items: flex-start;
-            background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; gap: 15px;
-        }
+        .assignment-box { display: flex; flex-direction: row; align-items: flex-start; background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; gap: 15px; }
         .assignment-label-area { display: flex; flex-direction: column; width: 100px; flex-shrink: 0; }
         .assignment-label-area label { font-size: 12px; color: #666; margin-bottom: 4px; }
-        .assignment-box input {
-            font-weight: bold; font-size: 16px; padding: 8px;
-            border: 1px solid #ccc; border-radius: 4px; width: 100%; text-align: center;
-        }
-        .assignment-box textarea {
-            flex-grow: 1; height: 80px; resize: vertical; padding: 12px; border: 1px solid #ccc; 
-            border-radius: 4px; font-size: 15px; line-height: 1.6;
-        }
+        .assignment-box input { font-weight: bold; font-size: 16px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; text-align: center; }
+        .assignment-box textarea { flex-grow: 1; height: 80px; resize: vertical; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; line-height: 1.6; }
 
         @media print {
             body { background: #fff; padding: 0; }
@@ -151,12 +70,17 @@
     <h2>アメフト サインメーカー</h2>
 
     <div class="save-load-area">
-        <button class="btn-primary" onclick="savePlayData()">現在の状態を保存する</button>
+        <button class="btn-primary" onclick="savePlayData()">ローカル保存</button>
         <select id="saved-plays-dropdown">
             <option value="">-- 保存されたサインを読み込む --</option>
         </select>
         <button onclick="loadPlayData()">読み込み</button>
         <button onclick="deletePlayData()" style="background-color: #ef5350; color: white;">削除</button>
+        
+        <div class="share-area">
+            <button class="btn-share" onclick="exportPlayData()">📤 現在のサインを「共有コード」としてコピー</button>
+            <button class="btn-share" style="background-color: #607d8b;" onclick="importPlayData()">📥 仲間からの「共有コード」を読み込む</button>
+        </div>
     </div>
     
     <div class="header">
@@ -185,28 +109,17 @@
     </div>
 
     <h3>ポジションごとの動き（アサイメント）</h3>
-    <div class="assignments" id="assignments-container">
-        </div>
+    <div class="assignments" id="assignments-container"></div>
 </div>
 
 <script>
     const offenseInitialData = [
-        { id: 'o1', name: 'C', x: 50, y: 70 },
-        { id: 'o2', name: 'LG', x: 46, y: 70 },
-        { id: 'o3', name: 'RG', x: 54, y: 70 },
-        { id: 'o4', name: 'LT', x: 42, y: 70 },
-        { id: 'o5', name: 'RT', x: 58, y: 70 },
-        { id: 'o6', name: 'QB', x: 50, y: 78 },
-        { id: 'o7', name: 'RB', x: 50, y: 88 },
-        { id: 'o8', name: 'TE', x: 62, y: 70 },
-        { id: 'o9', name: 'WR1', x: 15, y: 70 },
-        { id: 'o10', name: 'WR2', x: 85, y: 70 },
-        { id: 'o11', name: 'WR3', x: 25, y: 72 }
+        { id: 'o1', name: 'C', x: 50, y: 70 }, { id: 'o2', name: 'LG', x: 46, y: 70 }, { id: 'o3', name: 'RG', x: 54, y: 70 },
+        { id: 'o4', name: 'LT', x: 42, y: 70 }, { id: 'o5', name: 'RT', x: 58, y: 70 }, { id: 'o6', name: 'QB', x: 50, y: 78 },
+        { id: 'o7', name: 'RB', x: 50, y: 88 }, { id: 'o8', name: 'TE', x: 62, y: 70 }, { id: 'o9', name: 'WR1', x: 15, y: 70 },
+        { id: 'o10', name: 'WR2', x: 85, y: 70 }, { id: 'o11', name: 'WR3', x: 25, y: 72 }
     ];
-    let defCount = 0;
-    let currentMode = 'move';
-    let isDrawing = false;
-    let lastTap = 0;
+    let defCount = 0; let currentMode = 'move'; let isDrawing = false; let lastTap = 0;
     
     const fieldPlayers = document.getElementById('field-players');
     const assignmentsContainer = document.getElementById('assignments-container');
@@ -214,57 +127,37 @@
     const ctx = canvas.getContext('2d');
     const field = document.getElementById('field');
 
-    function resizeCanvas() {
-        canvas.width = field.clientWidth;
-        canvas.height = field.clientHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    function resizeCanvas() { canvas.width = field.clientWidth; canvas.height = field.clientHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
     function createPlayerElement(id, name, x, y, type) {
         const div = document.createElement('div');
-        div.className = `player ${type}`;
-        div.id = `node-${id}`;
-        div.innerText = type === 'defense' ? '×' : name;
-        div.style.left = typeof x === 'number' ? `${x}%` : x;
-        div.style.top = typeof y === 'number' ? `${y}%` : y;
-        div.addEventListener('mousedown', startDrag);
-        div.addEventListener('touchstart', startDrag, {passive: false});
+        div.className = `player ${type}`; div.id = `node-${id}`; div.innerText = type === 'defense' ? '×' : name;
+        div.style.left = typeof x === 'number' ? `${x}%` : x; div.style.top = typeof y === 'number' ? `${y}%` : y;
+        div.addEventListener('mousedown', startDrag); div.addEventListener('touchstart', startDrag, {passive: false});
 
         if (type === 'defense') {
             div.addEventListener('dblclick', () => div.remove());
             div.addEventListener('touchend', (e) => {
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                if (tapLength < 500 && tapLength > 0) {
-                    div.remove();
-                    e.preventDefault();
-                }
+                const currentTime = new Date().getTime(); const tapLength = currentTime - lastTap;
+                if (tapLength < 500 && tapLength > 0) { div.remove(); e.preventDefault(); }
                 lastTap = currentTime;
             });
         }
-        fieldPlayers.appendChild(div);
-        return div;
+        fieldPlayers.appendChild(div); return div;
     }
 
-    // 初期化処理
     function initializeBoard() {
-        fieldPlayers.innerHTML = '';
-        assignmentsContainer.innerHTML = '';
-        document.getElementById('formation-name').value = '';
-        document.getElementById('play-name').value = '';
-        clearCanvas();
-        defCount = 0;
+        fieldPlayers.innerHTML = ''; assignmentsContainer.innerHTML = '';
+        document.getElementById('formation-name').value = ''; document.getElementById('play-name').value = '';
+        clearCanvas(); defCount = 0;
 
         offenseInitialData.forEach(p => {
             createPlayerElement(p.id, p.name, p.x, p.y, 'offense');
-            const box = document.createElement('div');
-            box.className = 'assignment-box';
-            box.id = `box-${p.id}`;
+            const box = document.createElement('div'); box.className = 'assignment-box'; box.id = `box-${p.id}`;
             box.innerHTML = `
                 <div class="assignment-label-area">
-                    <label>ポジション名</label>
-                    <input type="text" value="${p.name}" data-target="${p.id}" class="pos-input">
+                    <label>ポジション名</label><input type="text" value="${p.name}" data-target="${p.id}" class="pos-input">
                 </div>
                 <textarea class="assignment-text" placeholder="${p.name} の動き・役割を詳細に記入..."></textarea>
             `;
@@ -275,125 +168,62 @@
 
     assignmentsContainer.addEventListener('input', (e) => {
         if (e.target.classList.contains('pos-input')) {
-            const targetId = e.target.getAttribute('data-target');
-            const playerNode = document.getElementById(`node-${targetId}`);
+            const playerNode = document.getElementById(`node-${e.target.getAttribute('data-target')}`);
             if (playerNode) playerNode.innerText = e.target.value;
         }
     });
 
-    function addDefense() {
-        defCount++;
-        createPlayerElement(`d${defCount}`, 'X', 50 + (Math.random()*20-10), 60, 'defense');
-    }
+    function addDefense() { defCount++; createPlayerElement(`d${defCount}`, 'X', 50 + (Math.random()*20-10), 60, 'defense'); }
+    function clearDefense() { if(confirm("ディフェンスを消去しますか？")) document.querySelectorAll('.player.defense').forEach(el => el.remove()); }
 
-    function clearDefense() {
-        if(confirm("ディフェンスをすべて消去しますか？")) {
-            document.querySelectorAll('.player.defense').forEach(el => el.remove());
-        }
-    }
-
-    // --- データ保存・読み込み機能 ---
-    const STORAGE_KEY = 'playbook_saves';
-
-    function getSavedPlays() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : {};
-    }
-
-    function savePlayData() {
-        const playNameInput = document.getElementById('play-name').value.trim();
-        const formationNameInput = document.getElementById('formation-name').value.trim();
-        
-        if (!playNameInput) {
-            alert("「サイン名」を入力してください。保存名として使用されます。");
-            return;
-        }
-
+    // --- データ作成共通処理 ---
+    function buildPlayDataObject() {
         const playData = {
-            formationName: formationNameInput,
-            playName: playNameInput,
-            offense: [],
-            defense: [],
-            assignments: {},
-            canvasData: canvas.toDataURL() // 引いた線を画像データとして保存
+            formationName: document.getElementById('formation-name').value.trim(),
+            playName: document.getElementById('play-name').value.trim(),
+            offense: [], defense: [], assignments: {}, canvasData: canvas.toDataURL()
         };
-
-        // オフェンスの位置と名前を保存
         document.querySelectorAll('.player.offense').forEach(el => {
-            const id = el.id.replace('node-', '');
-            playData.offense.push({ id: id, name: el.innerText, left: el.style.left, top: el.style.top });
+            playData.offense.push({ id: el.id.replace('node-', ''), name: el.innerText, left: el.style.left, top: el.style.top });
         });
-
-        // ディフェンスの位置を保存
         document.querySelectorAll('.player.defense').forEach(el => {
-            const id = el.id.replace('node-', '');
-            playData.defense.push({ id: id, left: el.style.left, top: el.style.top });
+            playData.defense.push({ id: el.id.replace('node-', ''), left: el.style.left, top: el.style.top });
         });
-
-        // アサイメントの文章を保存
         document.querySelectorAll('.assignment-box').forEach(box => {
-            const id = box.id.replace('box-', '');
-            const text = box.querySelector('.assignment-text').value;
-            const posName = box.querySelector('.pos-input').value;
-            playData.assignments[id] = { text: text, posName: posName };
+            playData.assignments[box.id.replace('box-', '')] = {
+                text: box.querySelector('.assignment-text').value,
+                posName: box.querySelector('.pos-input').value
+            };
         });
-
-        const saves = getSavedPlays();
-        const saveKey = `[${formationNameInput}] ${playNameInput}`;
-        saves[saveKey] = playData;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
-        
-        updateDropdown();
-        document.getElementById('saved-plays-dropdown').value = saveKey;
-        alert(`サイン「${playNameInput}」をブラウザに保存しました！`);
+        return playData;
     }
 
-    function loadPlayData() {
-        const dropdown = document.getElementById('saved-plays-dropdown');
-        const selectedKey = dropdown.value;
-        if (!selectedKey) return;
-
-        const saves = getSavedPlays();
-        const playData = saves[selectedKey];
-        if (!playData) return;
-
-        // 一旦リセット
-        fieldPlayers.innerHTML = '';
-        assignmentsContainer.innerHTML = '';
-        clearCanvas();
-
-        // 基本情報の復元
+    // --- 画面への反映処理 ---
+    function applyPlayDataToBoard(playData) {
+        fieldPlayers.innerHTML = ''; assignmentsContainer.innerHTML = ''; clearCanvas();
         document.getElementById('formation-name').value = playData.formationName || '';
         document.getElementById('play-name').value = playData.playName || '';
 
-        // オフェンス・アサイメントの復元
         playData.offense.forEach(p => {
             createPlayerElement(p.id, p.name, p.left, p.top, 'offense');
-            
             const assignData = playData.assignments[p.id] || { text: '', posName: p.name };
-            const box = document.createElement('div');
-            box.className = 'assignment-box';
-            box.id = `box-${p.id}`;
+            const box = document.createElement('div'); box.className = 'assignment-box'; box.id = `box-${p.id}`;
             box.innerHTML = `
                 <div class="assignment-label-area">
-                    <label>ポジション名</label>
-                    <input type="text" value="${assignData.posName}" data-target="${p.id}" class="pos-input">
+                    <label>ポジション名</label><input type="text" value="${assignData.posName}" data-target="${p.id}" class="pos-input">
                 </div>
-                <textarea class="assignment-text" placeholder="動き・役割を詳細に記入...">${assignData.text}</textarea>
+                <textarea class="assignment-text">${assignData.text}</textarea>
             `;
             assignmentsContainer.appendChild(box);
         });
 
-        // ディフェンスの復元
         let maxDefId = 0;
         playData.defense.forEach(p => {
             createPlayerElement(p.id, 'X', p.left, p.top, 'defense');
-            const defNum = parseInt(p.id.replace('d', ''));
-            if(defNum > maxDefId) maxDefId = defNum;
+            const defNum = parseInt(p.id.replace('d', '')); if(defNum > maxDefId) maxDefId = defNum;
         });
-        defCount = maxDefId; // 次にディフェンスを追加する時の番号を調整
+        defCount = maxDefId;
 
-        // ルート（線）の復元
         if (playData.canvasData) {
             const img = new Image();
             img.onload = () => { ctx.drawImage(img, 0, 0); };
@@ -401,101 +231,103 @@
         }
     }
 
-    function deletePlayData() {
-        const dropdown = document.getElementById('saved-plays-dropdown');
-        const selectedKey = dropdown.value;
-        if (!selectedKey) return;
+    // --- ローカル保存機能 ---
+    const STORAGE_KEY = 'playbook_saves';
+    function getSavedPlays() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
 
-        if (confirm(`保存データ「${selectedKey}」を削除してもよろしいですか？`)) {
-            const saves = getSavedPlays();
-            delete saves[selectedKey];
+    function savePlayData() {
+        const playData = buildPlayDataObject();
+        if (!playData.playName) { alert("「サイン名」を入力してください。"); return; }
+        const saves = getSavedPlays();
+        const saveKey = `[${playData.formationName}] ${playData.playName}`;
+        saves[saveKey] = playData;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+        updateDropdown(); document.getElementById('saved-plays-dropdown').value = saveKey;
+        alert(`サイン「${playData.playName}」をブラウザに保存しました。`);
+    }
+
+    function loadPlayData() {
+        const selectedKey = document.getElementById('saved-plays-dropdown').value;
+        if (!selectedKey) return;
+        const playData = getSavedPlays()[selectedKey];
+        if (playData) applyPlayDataToBoard(playData);
+    }
+
+    function deletePlayData() {
+        const selectedKey = document.getElementById('saved-plays-dropdown').value;
+        if (!selectedKey) return;
+        if (confirm(`「${selectedKey}」を削除しますか？`)) {
+            const saves = getSavedPlays(); delete saves[selectedKey];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
-            updateDropdown();
-            alert("削除しました。");
+            updateDropdown(); alert("削除しました。");
         }
     }
 
     function updateDropdown() {
         const dropdown = document.getElementById('saved-plays-dropdown');
-        const saves = getSavedPlays();
         dropdown.innerHTML = '<option value="">-- 保存されたサインを読み込む --</option>';
-        for (const key in saves) {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = key;
+        for (const key in getSavedPlays()) {
+            const option = document.createElement('option'); option.value = option.textContent = key;
             dropdown.appendChild(option);
         }
     }
 
-    // モード切替や描画、ドラッグ機能は変更なし
+    // --- 【新規】エクスポート・インポート機能 ---
+    function exportPlayData() {
+        const playData = buildPlayDataObject();
+        const jsonString = JSON.stringify(playData);
+        // クリップボードにコピー
+        navigator.clipboard.writeText(jsonString).then(() => {
+            alert("✅ 共有用コードをコピーしました！\n\nLINEやメールで仲間に貼り付けて送信してください。");
+        }).catch(err => {
+            prompt("以下のコードをコピーして仲間に送ってください:", jsonString);
+        });
+    }
+
+    function importPlayData() {
+        const jsonString = prompt("仲間から送られた「共有用コード」をここに貼り付けてください:");
+        if (!jsonString) return;
+        try {
+            const playData = JSON.parse(jsonString);
+            applyPlayDataToBoard(playData);
+            alert("✅ サインの読み込みに成功しました！");
+        } catch(e) {
+            alert("❌ コードが正しくありません。すべてコピーできているか確認してください。");
+        }
+    }
+
+    // --- 描画・移動機能 ---
     function setMode(mode) {
-        currentMode = mode;
-        document.getElementById('btn-move').classList.toggle('active', mode === 'move');
+        currentMode = mode; document.getElementById('btn-move').classList.toggle('active', mode === 'move');
         document.getElementById('btn-draw').classList.toggle('active', mode === 'draw');
         canvas.style.pointerEvents = mode === 'draw' ? 'auto' : 'none';
     }
 
-    function getPointerPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
-            y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-        };
-    }
+    function getPointerPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left, y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top }; }
 
-    canvas.addEventListener('mousedown', (e) => {
-        if (currentMode !== 'draw') return;
-        isDrawing = true;
-        const pos = getPointerPos(e);
-        ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
-        ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    });
-    canvas.addEventListener('mousemove', (e) => {
-        if (!isDrawing || currentMode !== 'draw') return;
-        const pos = getPointerPos(e);
-        ctx.lineTo(pos.x, pos.y); ctx.stroke();
-    });
-    const stopDrawing = () => isDrawing = false;
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-    
-    canvas.addEventListener('touchstart', (e) => {
-        if(currentMode === 'draw') { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); }
-    }, {passive: false});
-    canvas.addEventListener('touchmove', (e) => {
-        if(currentMode === 'draw') { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); }
-    }, {passive: false});
+    canvas.addEventListener('mousedown', (e) => { if (currentMode !== 'draw') return; isDrawing = true; const pos = getPointerPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; });
+    canvas.addEventListener('mousemove', (e) => { if (!isDrawing || currentMode !== 'draw') return; const pos = getPointerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); });
+    const stopDrawing = () => isDrawing = false; canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
+    canvas.addEventListener('touchstart', (e) => { if(currentMode === 'draw') { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); } }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { if(currentMode === 'draw') { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); } }, {passive: false});
     canvas.addEventListener('touchend', stopDrawing);
 
     function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-    let draggedElement = null;
-    let offsetX = 0, offsetY = 0;
-
+    let draggedElement = null, offsetX = 0, offsetY = 0;
     function startDrag(e) {
-        if (currentMode !== 'move') return;
-        draggedElement = e.target;
-        const rect = draggedElement.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        offsetX = clientX - (rect.left + rect.width / 2);
-        offsetY = clientY - (rect.top + rect.height / 2);
-        e.preventDefault();
+        if (currentMode !== 'move') return; draggedElement = e.target; const rect = draggedElement.getBoundingClientRect();
+        offsetX = (e.touches ? e.touches[0].clientX : e.clientX) - (rect.left + rect.width / 2);
+        offsetY = (e.touches ? e.touches[0].clientY : e.clientY) - (rect.top + rect.height / 2); e.preventDefault();
     }
-
     document.addEventListener('mousemove', (e) => {
-        if (!draggedElement || currentMode !== 'move') return;
-        const rect = field.getBoundingClientRect();
+        if (!draggedElement || currentMode !== 'move') return; const rect = field.getBoundingClientRect();
         let x = Math.max(15, Math.min((e.touches ? e.touches[0].clientX : e.clientX) - rect.left - offsetX, rect.width - 15));
         let y = Math.max(15, Math.min((e.touches ? e.touches[0].clientY : e.clientY) - rect.top - offsetY, rect.height - 15));
-        draggedElement.style.left = (x / rect.width * 100) + '%';
-        draggedElement.style.top = (y / rect.height * 100) + '%';
+        draggedElement.style.left = (x / rect.width * 100) + '%'; draggedElement.style.top = (y / rect.height * 100) + '%';
     });
+    document.addEventListener('mouseup', () => draggedElement = null); document.addEventListener('touchend', () => { setTimeout(() => { draggedElement = null; }, 100); });
 
-    document.addEventListener('mouseup', () => draggedElement = null);
-    document.addEventListener('touchend', () => { setTimeout(() => { draggedElement = null; }, 100); });
-
-    // アプリ起動時に初期化を実行
     initializeBoard();
 </script>
 </body>
